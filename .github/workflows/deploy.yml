@@ -1,0 +1,92 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure kubectl
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        kubectl config use-context ${{ secrets.K8S_CONTEXT }}
+    
+    - name: Create namespace if not exists
+      run: |
+        kubectl create namespace toastyanalytics --dry-run=client -o yaml | kubectl apply -f -
+    
+    - name: Create secrets
+      run: |
+        kubectl create secret generic toastyanalytics-secrets \
+          --from-literal=jwt-secret=${{ secrets.JWT_SECRET_KEY }} \
+          --from-literal=database-url=${{ secrets.DATABASE_URL }} \
+          --from-literal=redis-host=${{ secrets.REDIS_HOST }} \
+          --namespace=toastyanalytics \
+          --dry-run=client -o yaml | kubectl apply -f -
+    
+    - name: Update image tags in manifests
+      run: |
+        export IMAGE_TAG=${{ github.sha }}
+        envsubst < deployment/kubernetes/deployments.yaml > deployment/kubernetes/deployments-updated.yaml
+    
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f deployment/kubernetes/deployments-updated.yaml --namespace=toastyanalytics
+    
+    - name: Install/Update Istio configuration
+      if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/master'
+      run: |
+        kubectl apply -f deployment/kubernetes/istio-config.yaml --namespace=toastyanalytics
+    
+    - name: Wait for rollout
+      run: |
+        kubectl rollout status deployment/grading-service --namespace=toastyanalytics --timeout=5m
+        kubectl rollout status deployment/meta-learning-service --namespace=toastyanalytics --timeout=5m
+        kubectl rollout status deployment/analytics-service --namespace=toastyanalytics --timeout=5m
+        kubectl rollout status deployment/api-gateway --namespace=toastyanalytics --timeout=5m
+    
+    - name: Run smoke tests
+      run: |
+        API_ENDPOINT=$(kubectl get service api-gateway -n toastyanalytics -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        curl -f http://${API_ENDPOINT}/health || exit 1
+    
+    - name: Notify deployment status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'Deployment to ${{ github.event.inputs.environment }} completed'
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

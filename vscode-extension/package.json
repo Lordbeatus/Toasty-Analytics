@@ -1,0 +1,103 @@
+{
+  "name": "toasty-analytics",
+  "displayName": "Toasty Analytics - AI Code Grading",
+  "description": "AI-powered code quality grading with multi-language support, prompt analysis, and real-time feedback",
+  "version": "0.0.1",
+  "publisher": "toastimer",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "code quality",
+    "linting",
+    "ai",
+    "grading",
+    "analytics",
+    "python",
+    "javascript",
+    "quality analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lordbeatus/Toastimer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Lordbeatus/Toastimer/issues"
+  },
+  "galleryBanner": {
+    "color": "#FF6B35",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "toastyAnalytics.gradeCode",
+        "title": "Toasty: Grade Code Quality",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "toastyAnalytics.gradePrompt",
+        "title": "Toasty: Grade Prompt Quality",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "toastyAnalytics.comprehensiveGrade",
+        "title": "Toasty: Comprehensive Grade",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "toastyAnalytics.checkServer",
+        "title": "Toasty: Check Server Status",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "toastyAnalytics.startServerGuide",
+        "title": "Toasty: How to Start Backend Server",
+        "icon": "$(question)"
+      }
+    ],
+    "configuration": {
+      "title": "Toasty Analytics",
+      "properties": {
+        "toastyAnalytics.backendUrl": {
+          "type": "string",
+          "default": "http://localhost:5000",
+          "description": "URL of the Toasty Analytics backend server"
+        },
+        "toastyAnalytics.useCustomTests": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable custom user-defined tests"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}

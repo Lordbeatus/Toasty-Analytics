@@ -1,0 +1,27 @@
+# Prometheus configuration
+
+global:
+  scrape_interval: 15s  # How often to collect metrics
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Scrape ToastyAnalytics API metrics
+  - job_name: 'toastyanalytics-api'
+    static_configs:
+      - targets: ['api:8000']
+    metrics_path: '/metrics'
+
+  # Scrape Celery worker metrics (if exposed)
+  - job_name: 'celery-worker'
+    static_configs:
+      - targets: ['worker:9999']  # If you expose worker metrics
+
+  # Scrape Redis metrics (using redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # Scrape PostgreSQL metrics (using postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']

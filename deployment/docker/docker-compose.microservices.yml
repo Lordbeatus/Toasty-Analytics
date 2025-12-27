@@ -1,0 +1,133 @@
+# Docker Compose for Microservices Architecture
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.gateway
+    container_name: toasty-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - GRADING_SERVICE=http://grading-service:8000
+      - META_LEARNING_SERVICE=http://meta-learning-service:8001
+      - ANALYTICS_SERVICE=http://analytics-service:8002
+    depends_on:
+      - grading-service
+      - meta-learning-service
+      - analytics-service
+    networks:
+      - toasty-network
+
+  # Grading Service
+  grading-service:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.grading
+    container_name: toasty-grading
+    environment:
+      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - toasty-network
+
+  # Meta-Learning Service
+  meta-learning-service:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.meta
+    container_name: toasty-meta
+    environment:
+      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - toasty-network
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.analytics
+    container_name: toasty-analytics
+    environment:
+      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - toasty-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: toasty-postgres
+    environment:
+      POSTGRES_DB: toastyanalytics
+      POSTGRES_USER: toasty
+      POSTGRES_PASSWORD: toasty123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toasty"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toasty-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: toasty-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - toasty-network
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: toasty-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - toasty-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: toasty-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - toasty-network
+
+networks:
+  toasty-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

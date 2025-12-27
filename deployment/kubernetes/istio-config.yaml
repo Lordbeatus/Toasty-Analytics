@@ -1,0 +1,185 @@
+# Istio Service Mesh Configuration
+# Install Istio in Kubernetes cluster
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: toastyanalytics
+  labels:
+    istio-injection: enabled
+---
+# Istio Gateway - Entry point for external traffic
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: toastyanalytics-gateway
+  namespace: toastyanalytics
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: toastyanalytics-tls
+    hosts:
+    - "api.toastyanalytics.dev"
+---
+# Virtual Service - Route traffic to services
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: toastyanalytics-routes
+  namespace: toastyanalytics
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - toastyanalytics-gateway
+  http:
+  # Grading service routes
+  - match:
+    - uri:
+        prefix: /grade
+    - uri:
+        prefix: /dimensions
+    route:
+    - destination:
+        host: grading-service
+        port:
+          number: 8000
+      weight: 90
+    - destination:
+        host: grading-service-canary
+        port:
+          number: 8000
+      weight: 10  # 10% canary deployment
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream
+    timeout: 10s
+  
+  # Meta-learning service routes
+  - match:
+    - uri:
+        prefix: /feedback
+    - uri:
+        prefix: /strategies
+    route:
+    - destination:
+        host: meta-learning-service
+        port:
+          number: 8001
+    timeout: 5s
+  
+  # Analytics service routes
+  - match:
+    - uri:
+        prefix: /analytics
+    - uri:
+        prefix: /history
+    route:
+    - destination:
+        host: analytics-service
+        port:
+          number: 8002
+    timeout: 5s
+  
+  # GraphQL endpoint
+  - match:
+    - uri:
+        prefix: /graphql
+    route:
+    - destination:
+        host: api-gateway
+        port:
+          number: 8080
+    timeout: 30s
+---
+# Destination Rules - Traffic policies
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: grading-service-dr
+  namespace: toastyanalytics
+spec:
+  host: grading-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 40
+  subsets:
+  - name: stable
+    labels:
+      version: stable
+  - name: canary
+    labels:
+      version: canary
+---
+# PeerAuthentication - mTLS enforcement
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: toastyanalytics
+spec:
+  mtls:
+    mode: STRICT  # Enforce mTLS for all services
+---
+# AuthorizationPolicy - Service-to-service auth
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: grading-service-authz
+  namespace: toastyanalytics
+spec:
+  selector:
+    matchLabels:
+      app: grading-service
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/toastyanalytics/sa/api-gateway"]
+        namespaces: ["toastyanalytics"]
+    to:
+    - operation:
+        methods: ["POST", "GET"]
+        paths: ["/grade", "/dimensions"]
+---
+# ServiceMonitor - Prometheus metrics collection
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: toastyanalytics-metrics
+  namespace: toastyanalytics
+spec:
+  selector:
+    matchLabels:
+      app: toastyanalytics
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

@@ -1,0 +1,44 @@
+services:
+  # Main API Service
+  - type: web
+    name: toastyanalytics-api
+    env: docker
+    dockerfilePath: ./deployment/docker/Dockerfile
+    dockerContext: ./
+    region: oregon  # Choose: oregon, frankfurt, singapore, ohio
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENABLE_NEURAL_GRADER
+        value: false  # Disable to save memory on free tier
+      - key: ENABLE_RATE_LIMITING
+        value: false
+      - key: ENABLE_CACHING
+        value: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toastyanalytics-db
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: toastyanalytics-redis
+          property: connectionString
+
+# Free PostgreSQL Database
+databases:
+  - name: toastyanalytics-db
+    databaseName: toastyanalytics
+    user: toasty
+    plan: free
+    region: oregon
+    ipAllowList: []  # Allow connections from anywhere
+
+# Free Redis Cache
+  - name: toastyanalytics-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: allkeys-lru  # Evict least recently used keys when full

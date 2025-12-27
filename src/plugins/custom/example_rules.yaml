@@ -1,0 +1,42 @@
+# Custom Grading Rules Examples
+
+# Example 1: No hardcoded passwords
+rules:
+  - name: "no_hardcoded_passwords"
+    description: "Detects hardcoded passwords in code"
+    pattern: '(password|passwd|pwd)\s*=\s*["\'][^"\']+["\']'
+    severity: "error"
+    weight: 2.0
+    dimension: "code_quality"
+  
+  # Example 2: No TODO comments
+  - name: "no_todo_comments"
+    description: "Code should not have TODO comments in production"
+    pattern: '(TODO|FIXME|HACK):'
+    severity: "warning"
+    weight: 0.5
+    dimension: "code_quality"
+  
+  # Example 3: Require type hints for functions
+  - name: "require_type_hints"
+    description: "Functions should have type hints"
+    pattern: 'def\s+\w+\([^)]*\)\s*:'
+    severity: "info"
+    weight: 1.0
+    dimension: "readability"
+  
+  # Example 4: No print statements (use logging)
+  - name: "no_print_statements"
+    description: "Use logging instead of print for production code"
+    pattern: '\bprint\('
+    severity: "warning"
+    weight: 1.0
+    dimension: "best_practices"
+  
+  # Example 5: Require docstrings for classes
+  - name: "require_class_docstrings"
+    description: "All classes should have docstrings"
+    pattern: 'class\s+\w+[^:]*:\s*(?!""")'
+    severity: "warning"
+    weight: 1.5
+    dimension: "readability"

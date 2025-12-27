@@ -1,0 +1,85 @@
+# Production Dependencies
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0,<3.0.0
+
+# Database
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+# psycopg2-binary - PostgreSQL adapter (optional, only for production with PostgreSQL)
+# Commented out to avoid Windows compilation errors - uses SQLite by default
+# Install separately if needed: pip install psycopg2-binary
+
+# Data processing (prebuilt wheels)
+numpy>=1.24.0
+scipy>=1.10.0
+pandas>=2.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+
+# ========================================
+# ADVANCED FEATURES (Optional)
+# ========================================
+
+# Neural Network Graders (Optional - install if using ML features)
+# torch>=2.0.0
+# transformers>=4.30.0
+
+# GraphQL API (Optional - install if using GraphQL)
+# strawberry-graphql[fastapi]>=0.200.0
+
+# Event Streaming (Optional - install one based on infrastructure)
+# kafka-python>=2.0.2  # For Kafka
+# pika>=1.3.0  # For RabbitMQ
+
+# Federated Learning (Optional - install if using federated learning)
+# flwr>=1.5.0  # Flower framework
+# torch>=2.0.0  # Also requires PyTorch
+
+# Monitoring & Caching (Optional but recommended for production)
+# redis>=5.0.0
+# prometheus-client>=0.18.0
+# sentry-sdk[fastapi]>=1.38.0
+
+# ========================================
+# NEW FEATURES (Available Now)
+# ========================================
+
+# JWT Authentication
+pyjwt>=2.8.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6  # For form data parsing
+
+# Rate Limiting (requires Redis)
+# redis>=5.0.0  # Uncomment to enable rate limiting
+
+# Distributed Tracing
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-instrumentation-fastapi>=0.41b0
+opentelemetry-instrumentation-requests>=0.41b0
+opentelemetry-instrumentation-redis>=0.41b0
+opentelemetry-instrumentation-sqlalchemy>=0.41b0
+opentelemetry-exporter-jaeger>=1.20.0
+# opentelemetry-exporter-zipkin>=1.20.0  # Optional: Zipkin support
+# opentelemetry-instrumentation-kafka  # Optional: Kafka tracing
+
+click>=8.1.0
+
+# Code quality tools (optional for linting)
+pylint>=3.0.0
+black>=23.0.0
+flake8>=7.0.0
+mypy>=1.8.0
+isort>=5.13.0
+
+# Testing (dev)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.23.0
+httpx>=0.26.0
+
+# Other
+requests>=2.31.0

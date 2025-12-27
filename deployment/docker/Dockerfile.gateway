@@ -1,0 +1,19 @@
+# Dockerfile for API Gateway
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt httpx
+
+# Copy application code
+COPY core/ ./core/
+COPY services/api_gateway.py ./
+COPY graphql_api.py ./
+
+# Expose port
+EXPOSE 8080
+
+# Run service
+CMD ["python", "-m", "uvicorn", "api_gateway:app", "--host", "0.0.0.0", "--port", "8080"]

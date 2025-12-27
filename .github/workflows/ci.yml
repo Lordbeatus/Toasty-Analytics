@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+      fail-fast: false
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: toasty
+          POSTGRES_PASSWORD: toasty_pass
+          POSTGRES_DB: toastyanalytics_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio httpx websocket-client
+    
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://toasty:toasty_pass@localhost:5432/toastyanalytics_test
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        JWT_SECRET_KEY: test-secret-key
+      run: |
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+  
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install black flake8 pylint mypy isort
+    
+    - name: Run Black
+      run: black --check src/ tests/
+    
+    - name: Run isort
+      run: isort --check-only --diff --profile black .
+    
+    - name: Run Flake8
+      run: flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+    
+    - name: Run mypy
+      run: mypy src/ --ignore-missing-imports --no-strict-optional
+      continue-on-error: true
+    
+    - name: Run Pylint
+      run: pylint src/ --disable=C0111,R0903,W0511 --max-line-length=120
+      continue-on-error: true
+  
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        cache: 'pip'
+        python-version: '3.11'
+    
+    - name: Install safety
+      run: pip install safety
+    
+    - name: Check for vulnerabilities
+      run: safety check --json
+      continue-on-error: true
+    
+    - name: Run Bandit security scan
+      run: |
+        pip install bandit
+        bandit -r src/ -f json -o bandit-report.json
+      continue-on-error: true
+
+  javascript:
+    name: JavaScript/TypeScript Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: |
+          mcp-server/package-lock.json
+    
+    - name: Install MCP Server dependencies
+      working-directory: ./mcp-server
+      run: npm ci
+    
+    - name: Lint MCP Server
+      working-directory: ./mcp-server
+      run: npm run lint --if-present
+      continue-on-error: true
+    
+    - name: Test MCP Server
+      working-directory: ./mcp-server
+      run: npm test --if-present
+      continue-on-error: true
