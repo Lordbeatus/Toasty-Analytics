@@ -8,8 +8,8 @@ ToastyAnalytics is a production-ready code analysis and grading system that uses
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/toastyanalytics.git
-cd toastyanalytics
+git clone https://github.com/Lordbeatus/Toasty-Analytics.git
+cd Toasty-Analytics
 
 # Install dependencies
 pip install -r requirements.txt
@@ -177,15 +177,34 @@ pytest --cov=. tests/
 
 ## 🤝 Contributing
 
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `pytest`
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📝 License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with ❤️ for vibecoding and AI agent self-improvement
+- Thanks to all contributors who help improve ToastyAnalytics
+
+## 📧 Contact & Support
+
+- **Issues**: [GitHub Issues](https://github.com/Lordbeatus/Toasty-Analytics/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Lordbeatus/Toasty-Analytics/discussions)
+- **Documentation**: [docs/](docs/)
+
+## ⭐ Show Your Support
+
+If you find this project useful, please consider giving it a star on GitHub!
 
 ## 🎯 Roadmap
 
