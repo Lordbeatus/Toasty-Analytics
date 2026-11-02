@@ -10,31 +10,31 @@ from typing import List, Optional
 def calculate_statistics(numbers: List[float]) -> dict:
     \"\"\"
     Calculate basic statistics for a list of numbers.
-    
+
     Args:
         numbers: List of numerical values
-        
+
     Returns:
         Dictionary containing mean, median, min, and max
-        
+
     Raises:
         ValueError: If the list is empty
     \"\"\"
     if not numbers:
         raise ValueError("Cannot calculate statistics for empty list")
-    
+
     sorted_numbers = sorted(numbers)
     n = len(sorted_numbers)
-    
+
     # Calculate mean
     mean = sum(sorted_numbers) / n
-    
+
     # Calculate median
     if n % 2 == 0:
         median = (sorted_numbers[n//2 - 1] + sorted_numbers[n//2]) / 2
     else:
         median = sorted_numbers[n//2]
-    
+
     return {
         'mean': mean,
         'median': median,
@@ -48,10 +48,10 @@ def main():
     \"\"\"Example usage.\"\"\"
     test_data = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     stats = calculate_statistics(test_data)
-    
+
     print(f"Statistics for {test_data}:")
     for key, value in stats.items():
-        print(f"  {key}: {value}")
+        print(f"{key}: {value}")
 
 
 if __name__ == "__main__":
@@ -108,15 +108,15 @@ print("Is 17 prime?", is_prime(17))
 if __name__ == "__main__":
     with open("good_code.py", "w") as f:
         f.write(good_code)
-    print("✓ Created good_code.py")
+    print("Created good_code.py")
 
     with open("bad_code.py", "w") as f:
         f.write(bad_code)
-    print("✓ Created bad_code.py")
+    print("Created bad_code.py")
 
     with open("medium_code.py", "w") as f:
         f.write(medium_code)
-    print("✓ Created medium_code.py")
+    print("Created medium_code.py")
 
     print("\nUse these files to test grading:")
-    print("  toastyanalytics grade good_code.py --user-id test -d code_quality")
+    print("toastyanalytics grade good_code.py --user-id test -d code_quality")

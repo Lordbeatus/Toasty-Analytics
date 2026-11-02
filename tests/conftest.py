@@ -2,16 +2,21 @@
 Test suite for toastyanalytics
 """
 
-import sys
-from pathlib import Path
-
-# Add parent directory to path
-if str(Path(__file__).parent.parent) not in sys.path:
-    sys.path.insert(0, str(Path(__file__).parent.parent))
+import os
 
 import pytest
-from src.database.models import DatabaseManager
-from src.meta_learning.engine import MetaLearner
+
+# Configuration is read at import time, so set test values before importing it.
+os.environ.setdefault("AUTH_ENABLED", "true")
+os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-not-for-production-use")
+os.environ.setdefault("TOASTY_API_KEYS", "test-api-key:test-user:admin:*")
+os.environ.setdefault("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+os.environ.setdefault("RATE_LIMIT_ENABLED", "true")
+os.environ.setdefault("RATE_LIMIT", "1000")
+os.environ.setdefault("RATE_LIMIT_ADMIN", "0")
+
+from toastyanalytics.database.models import DatabaseManager  # noqa: E402
+from toastyanalytics.meta_learning.engine import MetaLearner  # noqa: E402
 
 
 @pytest.fixture

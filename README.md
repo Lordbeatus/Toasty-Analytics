@@ -1,225 +1,222 @@
 # ToastyAnalytics
 
-> **Enterprise AI-Powered Code Grading Engine with Advanced Microservices Architecture**
+ToastyAnalytics grades source code across several quality dimensions and adjusts
+its scoring from user feedback. It ships as a FastAPI service, a Python library,
+and a CLI, with optional MCP-server and VS Code clients. It was originally built as internal tooling made for the team at Toastimer but the team realized it could be used for people beyond the team.
 
-ToastyAnalytics is a production-ready code analysis and grading system that uses meta-learning to continuously improve its assessment accuracy. Features include JWT authentication, rate limiting, distributed tracing, neural network graders, and full microservices support.
+## What it does
 
-## 🚀 Quick Start
+- **Structural code grading.** Parses Python with `ast` to measure function and
+  class layout, docstring coverage, import usage, and cyclomatic complexity, then
+  scores structure, readability, best practices, and complexity.
+- **Nine dimensions.** Readability reuses the code-quality analysis; accuracy
+  compares an answer to a supplied reference; prompt understanding, follow-up
+  quality, efficiency, and prompt quality grade generated language; speed and
+  reliability score generation time and task success consistency.
+- **Feedback-driven adaptation.** The meta-learning engine records feedback on
+  past gradings and updates per-user scoring weights and thresholds.
+- **Extensible graders.** Drop a Python grader or a YAML rule set into
+  `toastyanalytics/plugins/custom/` to add your own checks.
+- **HTTP API and CLI.** REST and WebSocket endpoints for integrations; a Click
+  CLI for local grading and analytics.
+- **Authentication and rate limits.** API keys and short-lived JWTs with scope
+  checks, per-user data isolation, and per-caller, per-endpoint rate limiting
+  backed by Redis with an in-memory fallback.
+- **Optional neural grading.** A CodeBERT-based grader is available when PyTorch
+  and Transformers are installed.
+
+## Status
+
+| Area | State |
+| --- | --- |
+| All nine dimension graders | Implemented, covered by tests |
+| Meta-learning from feedback | Implemented, covered by tests |
+| REST API, WebSocket events, CLI | Implemented |
+| API-key and JWT auth with scopes | Implemented and enabled by default |
+| Rate limiting (Redis or in-memory) | Implemented and enabled by default |
+| Plugin system (Python and YAML) | Implemented |
+| Neural grader | Optional, requires `[neural]` extra |
+| GraphQL API | Optional module, requires Strawberry |
+| Distributed tracing | Optional module; not enabled in the default app |
+
+## Quick start
+
+Requires Python 3.10 or newer.
 
 ```bash
-# Clone repository
 git clone https://github.com/Lordbeatus/Toasty-Analytics.git
 cd Toasty-Analytics
 
-# Install dependencies
-pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
 
-# Start infrastructure (databases, Redis, Jaeger)
-cd deployment/docker
-docker-compose -f docker-compose.split-db.yml up -d
-
-# Run server
-cd ../..
-uvicorn src.server_v2:app --reload
-
-# API available at: http://localhost:8000/docs
-# Jaeger UI at: http://localhost:16686
+cp .env.example .env             # required for API authentication
+uvicorn toastyanalytics.api:app --reload
 ```
 
-## ✨ Feature Highlights
+The API is now at <http://localhost:8000>, with interactive docs at
+<http://localhost:8000/docs>. `.env.example` sets a development JWT secret and
+the API key `dev-local-key`; replace both before deploying.
 
-### 🔐 Security & Performance
-- **JWT Authentication**: Token-based API security with RBAC
-- **Rate Limiting**: Redis-based request throttling (tiered limits)
-- **Distributed Tracing**: OpenTelemetry with Jaeger/Zipkin
-- **API Keys**: Service-to-service authentication
+### Authenticate
 
-### 🧠 Advanced AI Features
-- **Neural Network Graders**: CodeBERT-based ML grading
-- **Meta-Learning**: Adaptive thresholds from user feedback
-- **Federated Learning**: Privacy-preserving distributed training
-- **Custom Plugins**: Python & YAML-based extensibility
-
-### 🏗️ Enterprise Architecture
-- **Microservices**: 4 independent services + API gateway
-- **Service Mesh**: Istio with canary deployments & circuit breaking
-- **Database Splitting**: Per-service PostgreSQL databases
-- **Event Streaming**: Kafka/RabbitMQ integration
-- **GraphQL API**: Flexible queries alongside REST
-
-### 📊 Observability
-- **Distributed Tracing**: End-to-end request tracking
-- **Metrics**: Prometheus + Grafana dashboards
-- **Structured Logging**: JSON logs with Sentry integration
-- **Health Checks**: Readiness/liveness probes
-
-## 📖 Documentation
-
-- **[Complete Documentation](docs/README.md)** - System overview, features, and tech stack
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment for all platforms
-- **[Architecture Reference](docs/ARCHITECTURE.md)** - Technical architecture details
-- **[Quick Commands](quickCommandsHelp.md)** - Quick reference for development
-- **[Code Examples](examples/README.md)** - Usage examples and patterns
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│              API Gateway (JWT + Rate Limiting)          │
-│                   http://localhost:8080                 │
-└────────────┬────────────────────────────────────────────┘
-             │ (Distributed Tracing)
-    ┌────────┼────────┬────────────┬────────────┐
-    │        │        │            │            │
-┌───▼──┐ ┌──▼───┐ ┌──▼──────┐ ┌──▼────────┐ ┌─▼────┐
-│User  │ │Grade │ │Meta-Lrn │ │Analytics │ │Events│
-│Svc   │ │Svc   │ │Svc      │ │Svc       │ │Broker│
-└──┬───┘ └──┬───┘ └───┬─────┘ └───┬──────┘ └──┬───┘
-   │        │         │            │           │
-┌──▼────┐ ┌▼─────┐ ┌─▼────┐ ┌────▼───┐  ┌───▼──┐
-│User DB│ │Grade │ │Meta  │ │Analytics│ │Kafka │
-│:5433  │ │DB    │ │DB    │ │DB       │ │/RMQ  │
-│       │ │:5434 │ │:5435 │ │:5436    │ │      │
-└───────┘ └──────┘ └──────┘ └─────────┘ └──────┘
+```bash
+curl -X POST http://localhost:8000/auth/token \
+  -H "X-API-Key: dev-local-key" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "user-123"}'
 ```
 
-## 🔧 API Examples
+Use the returned `access_token` as `Authorization: Bearer <token>`. Service
+clients may send `X-API-Key` directly. Tokens carry only the scopes and roles
+requested, and endpoints reject access to another user's data.
 
-### Grade Code
-```python
-import requests
+### Docker
 
-response = requests.post("http://localhost:8000/grade", json={
-    "code": "def hello(): print('Hello')",
-    "language": "python",
+```bash
+cp .env.example .env
+docker compose -f deployment/docker/docker-compose.yml up --build
+```
+
+That stack runs PostgreSQL, Redis, the API, a Celery worker, and Celery beat.
+A split-database stack and a microservices stack live alongside it in
+`deployment/docker/`.
+
+## Usage
+
+### Grade code over HTTP
+
+```bash
+curl -X POST http://localhost:8000/grade \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
     "user_id": "user-123",
-    "dimensions": ["code_quality", "reliability"]
-})
-
-print(response.json())
+    "code": "def add(a, b):\n    return a + b\n",
+    "language": "python",
+    "dimensions": ["code_quality"]
+  }'
 ```
 
-### WebSocket Events
+The response contains per-dimension scores, feedback, breakdowns, and
+prioritized suggestions. `POST /feedback` accepts a rating and comments for a
+grading ID, which feeds the meta-learner.
+
+### Use the library
+
 ```python
-import asyncio
-import websockets
+from toastyanalytics import GradingDimension, get_grader_for_dimension
 
-async def listen():
-    async with websockets.connect("ws://localhost:8000/ws/user-123") as ws:
-        async for message in ws:
-            print(f"Event: {message}")
+grader = get_grader_for_dimension(GradingDimension.CODE_QUALITY)
+result = grader.grade(code="def add(a, b):\n    return a + b\n", language="python")
 
-asyncio.run(listen())
+print(result.score, result.feedback)
 ```
 
-## 📦 Project Structure
+### Use the CLI
 
+```bash
+toastyanalytics grade examples/sample_code.py --user-id demo -d code_quality
+toastyanalytics stats --user-id demo --days 7
+toastyanalytics serve --port 8000
 ```
+
+### Explore the endpoints
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Public | Service and database status |
+| `POST` | `/auth/token` | API key | Mint a user-scoped JWT pair |
+| `POST` | `/auth/refresh` | Refresh token | Mint a new access token |
+| `GET` | `/auth/me` | Any credential | Caller identity, roles, scopes |
+| `GET` | `/dimensions` | `grade:read` | Dimensions with an available grader |
+| `POST` | `/grade` | `grade:write` | Grade a snippet |
+| `POST` | `/feedback` | `grade:write` | Attach feedback to a grading |
+| `GET` | `/analytics/user/{user_id}` | `analytics:read` | Submission history and trend |
+| `GET` | `/strategies/{user_id}` | `analytics:read` | Learned strategies for a user |
+| `WS` | `/ws/{user_id}` | JWT or API key | Live grading and learning events |
+
+Rate limits are per caller and endpoint: `RATE_LIMIT` requests per minute,
+with `X-RateLimit-*` headers on every response and `429` plus `Retry-After`
+when exhausted. Callers with the `admin` role use `RATE_LIMIT_ADMIN` (0 means
+unlimited). `/health`, `/`, and the docs are exempt.
+
+## Architecture
+
+```text
+                HTTP / WebSocket
+                       │
+                 FastAPI app (api.py)
+                       │
+        ┌──────────────┼───────────────┐
+        │              │               │
+   Graders        Meta-learner     Database layer
+ (AST, speed,   (weights and      (SQLAlchemy:
+  reliability)   thresholds)       SQLite/Postgres)
+        │              │               │
+        └──────────────┴───────────────┘
+                       │
+              Celery worker and beat
+```
+
+Grading and learning both run in-process; Celery handles background work in the
+Docker stacks. The `toastyanalytics/services/` modules expose the same
+capabilities as standalone services for the microservice deployment.
+
+## Project layout
+
+```text
 toastyanalytics/
-├── core/              # Base graders and types
-├── graders/           # Dimension-specific graders
-├── meta_learning/     # Self-improvement engine
-├── database/          # ORM models
-├── mcp_server/        # MCP protocol server
-├── scripts/           # Utility scripts
-├── tests/             # Test suite
-│   └── integration/   # Integration tests
-├── docs/              # Documentation
-├── servers/           # Server implementations
-└── server_v2.py       # Production server (v2)
+├── api.py                 # FastAPI app: grading, feedback, analytics, WebSocket
+├── cli/main.py            # Click CLI
+├── core/                  # Base grader and shared types
+├── graders/               # Nine dimension graders plus the optional neural grader
+├── meta_learning/         # Feedback-driven strategy engine
+├── database/              # SQLAlchemy models and database splitting helpers
+├── plugins/               # Plugin loader and custom graders
+├── services/              # Optional microservice entry points
+├── auth/, middleware/     # JWT/API-key auth and rate limiting used by the app
+├── event_sourcing/        # Event store and projections
+├── messaging/             # Kafka/RabbitMQ or in-memory event broker
+├── tracing/               # Optional OpenTelemetry setup
+├── config.py              # Environment-backed settings
+├── celery_app.py          # Celery application and scheduled tasks
+tests/                     # Pytest suite
+examples/                  # Runnable library and API examples
+deployment/                # Docker Compose and Kubernetes manifests
+mcp-server/                # MCP server (Node.js)
+vscode-extension/          # VS Code client
 ```
 
-## 🧪 Testing
+## Development
 
 ```bash
-# Run unit tests
-pytest tests/
+pip install -e ".[dev]"
 
-# Test WebSocket connection
-python tests/integration/test_websocket.py
-
-# Test full grading pipeline
-python tests/integration/test_v2.py
+pytest                                   # unit and integration tests
+black --check toastyanalytics tests
+isort --check-only --profile black toastyanalytics tests
+flake8 toastyanalytics tests
 ```
 
-## 🔌 Services
+Configuration is read from environment variables; see `.env.example` and
+`toastyanalytics/config.py`. `TOASTYANALYTICS_DB_URL` defaults to a local SQLite
+file.
 
-The Docker Compose stack includes:
+## Documentation
 
-| Service    | Port | Description                    |
-|------------|------|--------------------------------|
-| API        | 8000 | FastAPI application            |
-| PostgreSQL | 5432 | Database                       |
-| Redis      | 6379 | Cache layer                    |
-| Prometheus | 9090 | Metrics collection             |
-| Grafana    | 3000 | Dashboards (admin/admin)       |
-| Worker     | -    | Celery background tasks        |
-| Beat       | -    | Celery scheduler               |
+- [Quick start and operations](docs/quickstart.md)
+- [Architecture reference](docs/architecture.md)
+- [Production deployment](docs/production-deployment.md)
+- [Examples](examples/README.md)
 
-## 🛠️ Development
+## Contributing
 
-```bash
-# Install dependencies
-pip install -r requirements-prod.txt
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+the development workflow and [SECURITY.md](SECURITY.md) for reporting
+vulnerabilities.
 
-# Run locally (without Docker)
-uvicorn server_v2:app --reload
+## License
 
-# Run tests with coverage
-pytest --cov=. tests/
-```
-
-## 📊 Monitoring
-
-- **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000 (login: admin/admin)
-- **API Metrics**: http://localhost:8000/metrics
-
-## 🤝 Contributing
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ for vibecoding and AI agent self-improvement
-- Thanks to all contributors who help improve ToastyAnalytics
-
-## 📧 Contact & Support
-
-- **Issues**: [GitHub Issues](https://github.com/Lordbeatus/Toasty-Analytics/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Lordbeatus/Toasty-Analytics/discussions)
-- **Documentation**: [docs/](docs/)
-
-## ⭐ Show Your Support
-
-If you find this project useful, please consider giving it a star on GitHub!
-
-## 🎯 Roadmap
-
-- [x] Multi-dimensional grading
-- [x] Meta-learning engine
-- [x] WebSocket support
-- [x] Event-driven architecture
-- [x] Neural network graders
-- [x] GraphQL API
-- [x] Kafka integration
-- [x] Federated learning
-- [x] VS Code extension
-- [ ] Efficiency enhancements and improved model
-
----
-
-**Built with ❤️ for vibecoding and AI agent self-improvement**
-
+MIT. See [LICENSE](LICENSE).

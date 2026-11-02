@@ -4,9 +4,9 @@ Tests for meta-learning engine
 
 from datetime import datetime, timedelta
 
-from src.core.types import LearningStrategy as StrategyType
-from src.database.models import GradingHistory, User
-from src.meta_learning.engine import MetaLearner
+from toastyanalytics.core.types import LearningStrategy as StrategyType
+from toastyanalytics.database.models import GradingHistory, User
+from toastyanalytics.meta_learning.engine import MetaLearner
 
 
 class TestMetaLearner:
@@ -119,7 +119,7 @@ class TestMetaLearner:
         session.add(user)
         session.flush()
 
-        from src.database.models import LearningStrategy
+        from toastyanalytics.database.models import LearningStrategy
 
         strategy = LearningStrategy(
             user_id="test_user3",
@@ -146,8 +146,8 @@ class TestMetaLearner:
 
     def test_apply_strategies_to_grader(self, meta_learner, db_manager):
         """Test applying learned strategies to a grader"""
-        from src.database.models import LearningStrategy
-        from src.graders import CodeQualityGraderV2
+        from toastyanalytics.database.models import LearningStrategy
+        from toastyanalytics.graders import CodeQualityGraderV2
 
         session = db_manager.get_session()
 

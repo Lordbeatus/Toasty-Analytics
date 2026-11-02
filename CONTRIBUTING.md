@@ -1,137 +1,98 @@
-# Contributing to ToastyAnalytics
+# Contributing
 
-Thank you for your interest in contributing to ToastyAnalytics! We welcome contributions from the community.
+Thanks for improving ToastyAnalytics. This guide covers the local workflow and
+what a pull request should include.
 
-## 🚀 Getting Started
+## Development setup
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/Toasty-Analytics.git
-   cd Toasty-Analytics
-   ```
-3. **Create a branch** for your changes:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-## 💻 Development Setup
-
-### Prerequisites
-- Python 3.9+
-- Docker & Docker Compose
-- Git
-
-### Local Development
+Requires Python 3.10+ and Git. Docker is optional and only needed for the
+PostgreSQL/Redis stacks.
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+git clone https://github.com/Lordbeatus/Toasty-Analytics.git
+cd Toasty-Analytics
 
-# Start infrastructure (PostgreSQL, Redis, etc.)
-cd deployment/docker
-docker-compose up -d
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
 
-# Run tests
-cd ../..
-pytest tests/
-
-# Run the server
-uvicorn src.server_v2:app --reload
+cp .env.example .env
+pytest
+uvicorn toastyanalytics.api:app --reload
 ```
 
-## 📝 Contribution Guidelines
+The service runs on <http://localhost:8000> with an SQLite database by default.
 
-### Code Style
-- Follow PEP 8 for Python code
-- Use type hints where possible
-- Write descriptive commit messages
-- Add docstrings to all functions and classes
+## Making changes
 
-### Testing
-- Write tests for new features
-- Ensure all tests pass before submitting PR
-- Maintain or improve code coverage
+1. Create a branch: `git checkout -b feature/your-feature`.
+2. Make the change and add tests.
+3. Run the checks below.
+4. Commit with a conventional message and open a pull request.
+
+### Checks
 
 ```bash
-# Run tests with coverage
-pytest --cov=src tests/
+pytest
+black --check toastyanalytics tests
+isort --check-only --profile black toastyanalytics tests
+flake8 toastyanalytics tests
 ```
 
-### Commit Messages
-Follow the conventional commits format:
-- `feat: Add new grading algorithm`
-- `fix: Resolve rate limiting bug`
-- `docs: Update deployment guide`
-- `test: Add tests for neural grader`
-- `refactor: Improve database queries`
+CI runs the same commands on Python 3.10–3.13, plus Bandit and the MCP server's
+JavaScript checks.
 
-## 🔄 Pull Request Process
+### Style
 
-1. **Update documentation** if you're changing functionality
-2. **Add tests** for new features
-3. **Run the test suite** and ensure everything passes
-4. **Update the README.md** if needed
-5. **Submit your PR** with a clear description of changes
+- Black formatting, isort with the Black profile, flake8 at 120 columns.
+- Type hints on public functions and modules.
+- Docstrings on public classes, modules, and non-obvious functions.
+- Keep API responses and CLI output plain ASCII.
 
-### PR Checklist
-- [ ] Code follows project style guidelines
-- [ ] All tests pass
-- [ ] Documentation updated
-- [ ] Commit messages are clear
-- [ ] No merge conflicts
+### Commit messages
 
-## 🐛 Bug Reports
+Use conventional commits:
 
-When reporting bugs, please include:
-- Python version
-- OS and version
-- Steps to reproduce
-- Expected vs actual behavior
-- Error messages/logs
-- Minimal code example (if applicable)
+- `feat: add a language-aware complexity heuristic`
+- `fix: return 400 for unsupported grading dimensions`
+- `docs: correct the deployment prerequisites`
+- `test: cover feedback-driven threshold updates`
+- `refactor: split grader factories from implementations`
 
-## 💡 Feature Requests
+## Pull requests
 
-We love new ideas! When suggesting features:
-- Explain the use case
-- Describe the proposed solution
-- Consider backward compatibility
-- Discuss potential alternatives
+Include:
 
-## 🤝 Code of Conduct
+- what changed and why
+- the tests and commands you ran
+- any configuration or migration notes
 
-### Our Pledge
-We are committed to providing a welcoming and inspiring community for all.
+Keep pull requests focused. Unrelated formatting or refactors make review
+slower; separate them into their own change.
 
-### Our Standards
-- Be respectful and inclusive
-- Accept constructive criticism gracefully
-- Focus on what's best for the community
-- Show empathy towards others
+## Reporting bugs
 
-### Unacceptable Behavior
-- Harassment or discriminatory language
-- Trolling or insulting comments
-- Personal or political attacks
-- Publishing others' private information
+Open an issue with:
 
-## 📚 Resources
+- Python version and operating system
+- steps to reproduce
+- expected and actual behaviour
+- relevant logs or a minimal snippet
 
-- [Documentation](docs/README.md)
-- [Architecture Guide](docs/ARCHITECTURE.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Quick Start Guide](docs/QUICK_START.md)
+## Feature requests
 
-## ❓ Questions?
+Describe the use case, the proposed behaviour, and alternatives you considered.
+Backward compatibility matters: note anything that would change the API or the
+stored data.
 
-Feel free to:
-- Open an issue for discussion
-- Reach out to maintainers
-- Check existing issues and PRs
+## Code of conduct
 
-## 🏆 Recognition
+Be respectful, assume good intent, and keep discussion focused on the work.
+Harassment, discriminatory language, and personal attacks are not acceptable.
 
-Contributors will be acknowledged in our README and release notes.
+## Documentation
 
-Thank you for contributing to ToastyAnalytics! 🎉
+- [Documentation index](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Quick start](docs/quickstart.md)
+- [Production deployment](docs/production-deployment.md)

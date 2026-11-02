@@ -5,15 +5,15 @@ Tests the full workflow from grading to meta-learning to API
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from src.core.types import GradingDimension
-from src.database.models import DatabaseManager
-from src.graders import get_grader_for_dimension
-from src.meta_learning.engine import MetaLearner
-from src.server_v2 import app
+
+from toastyanalytics.api import app
+from toastyanalytics.core.types import GradingDimension
+from toastyanalytics.database.models import DatabaseManager
+from toastyanalytics.graders import get_grader_for_dimension
+from toastyanalytics.meta_learning.engine import MetaLearner
 
 
 @pytest.fixture
@@ -35,8 +35,10 @@ def temp_db():
 
 @pytest.fixture
 def api_client():
-    """Create FastAPI test client"""
-    return TestClient(app)
+    """Create an authenticated FastAPI test client"""
+    client = TestClient(app)
+    client.headers.update({"X-API-Key": "test-api-key"})
+    return client
 
 
 class TestEndToEndGrading:
@@ -75,7 +77,7 @@ def calculate_sum(numbers):
         session_id = "test_session_1"
         session = temp_db.get_session()
         try:
-            from src.database.models import GradingHistory, User
+            from toastyanalytics.database.models import GradingHistory, User
 
             # Create user if not exists
             user = session.query(User).filter_by(id=user_id).first()
@@ -143,7 +145,7 @@ def calculate_sum(numbers):
         session_id = "negative_test"
         session = temp_db.get_session()
         try:
-            from src.database.models import GradingHistory, User
+            from toastyanalytics.database.models import GradingHistory, User
 
             # Create user if not exists
             user = session.query(User).filter_by(id=user_id).first()
@@ -180,7 +182,7 @@ def calculate_sum(numbers):
         # Verify strategy was created
         session = temp_db.get_session()
         try:
-            from src.database.models import LearningStrategy
+            from toastyanalytics.database.models import LearningStrategy
 
             strategies = (
                 session.query(LearningStrategy).filter_by(user_id=user_id).all()
@@ -313,7 +315,7 @@ class TestDatabasePersistence:
         # Create user
         session = temp_db.get_session()
         try:
-            from src.database.models import User
+            from toastyanalytics.database.models import User
 
             user = session.query(User).filter_by(id=user_id).first()
             if not user:
@@ -342,7 +344,7 @@ class TestDatabasePersistence:
         # Add multiple grading records
         session = temp_db.get_session()
         try:
-            from src.database.models import GradingHistory, User
+            from toastyanalytics.database.models import GradingHistory, User
 
             # Create user if not exists
             user = session.query(User).filter_by(id=user_id).first()
@@ -388,7 +390,7 @@ class TestDatabasePersistence:
         # Add strategy
         session = temp_db.get_session()
         try:
-            from src.database.models import LearningStrategy, User
+            from toastyanalytics.database.models import LearningStrategy, User
 
             # Create user if not exists
             user = session.query(User).filter_by(id=user_id).first()

@@ -287,9 +287,9 @@ function getWelcomeHTML(): string {
         <p>Open a terminal in the <code>toastyanalytics</code> folder:</p>
         <div class="command">
             pip install -r requirements.txt<br>
-            python app.py
+            uvicorn toastyanalytics.api:app --port 8000
         </div>
-        <p class="success">✅ Server should run at http://localhost:5000</p>
+        <p class="success">✅ Server should run at http://localhost:8000</p>
     </div>
 
     <div class="step">
@@ -322,7 +322,7 @@ function getWelcomeHTML(): string {
     <h2>⚙️ Configuration</h2>
     <p>Go to Settings → Search "Toasty Analytics" to configure:</p>
     <ul>
-        <li><strong>Backend URL</strong> (default: http://localhost:5000)</li>
+        <li><strong>Backend URL</strong> (default: http://localhost:8000)</li>
         <li><strong>Custom Tests</strong> (enable/disable)</li>
     </ul>
 
@@ -392,7 +392,7 @@ function getServerGuideHTML(): string {
         <p><strong>Step 2:</strong> Install dependencies:</p>
         <div class="command">pip install flask flask-cors</div>
         <p><strong>Step 3:</strong> Start the server:</p>
-        <div class="command">python app.py</div>
+        <div class="command">uvicorn toastyanalytics.api:app --port 8000</div>
         <p>✅ You should see: <strong>"🔥 Toasty Analytics Backend Starting..."</strong></p>
         <p>⚠️ Keep this terminal window open!</p>
     </div>
@@ -403,7 +403,7 @@ function getServerGuideHTML(): string {
         <p><strong>Step 2:</strong> Navigate to <code>toastyanalytics</code> folder</p>
         <p><strong>Step 3:</strong> Run:</p>
         <div class="command">docker-compose up</div>
-        <p>✅ Server will run at http://localhost:5000</p>
+        <p>✅ Server will run at http://localhost:8000</p>
     </div>
 
     <h2>✅ Verify It's Working</h2>
@@ -412,14 +412,14 @@ function getServerGuideHTML(): string {
         <p>Look for: <strong>$(check) Toasty Analytics</strong> (bottom-right)</p>
         <br>
         <p><strong>Test 2:</strong> Open your browser</p>
-        <p>Visit: <a href="http://localhost:5000/health">http://localhost:5000/health</a></p>
+        <p>Visit: <a href="http://localhost:8000/health">http://localhost:8000/health</a></p>
         <p>You should see: <code>{"status": "healthy", "service": "Toasty Analytics"}</code></p>
     </div>
 
     <h2>❌ Troubleshooting</h2>
     <div class="step">
         <p><strong>Port already in use?</strong></p>
-        <p>Change the port in <code>app.py</code> and VS Code settings</p>
+        <p>Change the API port and the VS Code setting</p>
         <br>
         <p><strong>Module not found?</strong></p>
         <div class="command">pip install -r requirements.txt</div>

@@ -1,51 +1,51 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
-We release patches for security vulnerabilities for the following versions:
+Security fixes are applied to `main`. Older snapshots are not maintained.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| main    | :white_check_mark: |
-| < 1.0   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Do not open a public issue for a security problem. Use GitHub's private
+vulnerability reporting on
+[the repository](https://github.com/Lordbeatus/Toasty-Analytics/security/advisories/new),
+or contact the maintainer directly if that is unavailable.
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+Include:
 
-If you discover a security vulnerability, please send an email to the maintainers with:
+- a description of the issue and its impact
+- steps to reproduce, or a proof of concept
+- affected versions or commits
+- any suggested remediation
 
-1. Description of the vulnerability
-2. Steps to reproduce
-3. Potential impact
-4. Suggested fix (if any)
+You can expect an acknowledgement within 48 hours, an assessment within a week,
+and a fix or mitigation plan for confirmed issues. Please allow time for a fix
+before public disclosure.
 
-### What to Expect
+## Deployment guidance
 
-- **Acknowledgment**: Within 48 hours
-- **Initial Assessment**: Within 1 week
-- **Fix Timeline**: Depends on severity (critical issues within days, others within weeks)
-- **Disclosure**: After a fix is released, we'll publicly disclose the vulnerability
+The default configuration is intended for local development. Before exposing an
+instance publicly:
 
-## Security Best Practices
+1. **Add authentication.** The default FastAPI app does not require
+   authentication. Put it behind an authenticating proxy or wire
+   `toastyanalytics/auth/jwt_auth.py` into the application.
+2. **Use TLS.** Terminate HTTPS at a proxy or load balancer.
+3. **Protect credentials.** Keep `TOASTYANALYTICS_DB_URL`, `SENTRY_DSN`, and
+   `JWT_SECRET_KEY` in environment variables or a secret manager, never in Git.
+4. **Restrict the database and Redis.** Use strong passwords, private networks,
+   and no public port exposure.
+5. **Set a real JWT secret.** `jwt_auth.py` falls back to a placeholder key when
+   `JWT_SECRET_KEY` is unset; the placeholder is not safe for production.
+6. **Update dependencies.** Dependabot or a scheduled `pip list --outdated`
+   review keeps the stack current.
+7. **Review CORS.** The API allows all origins by default, which is convenient
+   locally and too permissive for a public deployment.
 
-When using ToastyAnalytics in production:
+## Known limitations
 
-1. **Use Environment Variables**: Never commit secrets to git
-2. **Enable JWT Authentication**: Secure all API endpoints
-3. **Use HTTPS**: Always use TLS in production
-4. **Update Dependencies**: Regularly update to latest versions
-5. **Enable Rate Limiting**: Protect against abuse
-6. **Monitor Logs**: Watch for suspicious activity
-7. **Database Security**: Use strong passwords and restrict access
-8. **Container Security**: Scan Docker images for vulnerabilities
-
-## Known Security Considerations
-
-- API keys should be rotated regularly
-- JWT tokens have configurable expiration times
-- Rate limiting is configurable per endpoint
-- Database credentials should use strong passwords
-- Redis should be password-protected in production
-
-Thank you for helping keep ToastyAnalytics secure!
+- The default app exposes grading and analytics endpoints without
+  authorization.
+- Rate limiting exists as a helper module but is not enabled by default.
+- Error tracking is only active when `sentry-sdk` is installed and
+  `SENTRY_DSN` is set.

@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toastyanalytics"
+version = "2.0.0"
+description = "Multi-dimensional code grading with feedback-driven threshold adaptation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ToastyAnalytics contributors" }]
+keywords = ["code-quality", "grading", "meta-learning", "fastapi", "developer-tools"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.26",
+    "websockets>=12.0",
+    "black>=23.12",
+    "isort>=5.13",
+    "flake8>=7.0",
+    "mypy>=1.8",
+    "pylint>=3.0",
+]
+postgres = ["psycopg2-binary>=2.9.9"]
+sentry = ["sentry-sdk[fastapi,sqlalchemy,celery]>=1.40"]
+neural = ["torch>=2.0.0", "transformers>=4.30.0"]
+
+[project.urls]
+Repository = "https://github.com/Lordbeatus/Toasty-Analytics"
+Issues = "https://github.com/Lordbeatus/Toasty-Analytics/issues"
+
+[project.scripts]
+toastyanalytics = "toastyanalytics.cli.main:cli"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["toastyanalytics*"]
+
+[tool.setuptools.package-data]
+"toastyanalytics.plugins.custom" = ["*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+known_first_party = ["toastyanalytics"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint."messages control"]
+disable = ["C0111", "R0903", "W0511"]

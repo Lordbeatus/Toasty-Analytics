@@ -25,7 +25,7 @@ pytestmark = pytest.mark.skip(reason="Requires live server on localhost:8000")
 
 def test_health():
     """Test health endpoint"""
-    print("\n🏥 Testing Health Endpoint...")
+    print("\n Testing Health Endpoint...")
     response = requests.get(f"{BASE_URL}/health")
     print(f"Status: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")
@@ -34,7 +34,7 @@ def test_health():
 
 def test_dimensions():
     """Test dimensions endpoint"""
-    print("\n📊 Testing Dimensions Endpoint...")
+    print("\n Testing Dimensions Endpoint...")
     response = requests.get(f"{BASE_URL}/dimensions")
     print(f"Status: {response.status_code}")
     print(f"Available dimensions: {response.json()}")
@@ -43,7 +43,7 @@ def test_dimensions():
 
 def test_grading():
     """Test grading with real code"""
-    print("\n🎯 Testing Grading Endpoint...")
+    print("\n Testing Grading Endpoint...")
 
     test_code = """
 def calculate_fibonacci(n):
@@ -63,7 +63,7 @@ print(f"Fibonacci(10) = {result}")
         "dimensions": ["code_quality", "speed", "reliability"],
     }
 
-    print(f"Sending code for grading...")
+    print("Sending code for grading...")
     response = requests.post(
         f"{BASE_URL}/grade", json=payload, headers={"Content-Type": "application/json"}
     )
@@ -71,14 +71,14 @@ print(f"Fibonacci(10) = {result}")
     print(f"Status: {response.status_code}")
     if response.status_code == 200:
         result = response.json()
-        print(f"\n📈 Grading Results:")
+        print("\n Grading Results:")
         print(f"Overall Score: {result.get('overall_score', 'N/A')}")
-        print(f"\nDimension Scores:")
+        print("\nDimension Scores:")
         for dim, score in result.get("dimension_scores", {}).items():
-            print(f"  - {dim}: {score:.2f}")
-        print(f"\nRecommendations:")
+            print(f"- {dim}: {score:.2f}")
+        print("\nRecommendations:")
         for rec in result.get("recommendations", []):
-            print(f"  • {rec}")
+            print(f"- {rec}")
     else:
         print(f"Error: {response.text}")
 
@@ -88,22 +88,22 @@ print(f"Fibonacci(10) = {result}")
 @pytest.mark.skipif(not WEBSOCKET_AVAILABLE, reason="websocket-client not installed")
 def test_websocket():
     """Test WebSocket connection"""
-    print("\n🔌 Testing WebSocket Connection...")
+    print("\n Testing WebSocket Connection...")
 
     messages_received = []
 
     def on_message(ws, message):
-        print(f"📨 Received: {message}")
+        print(f"Received: {message}")
         messages_received.append(message)
 
     def on_error(ws, error):
-        print(f"❌ Error: {error}")
+        print(f"Error: {error}")
 
     def on_close(ws, close_status_code, close_msg):
-        print(f"🔒 Connection closed")
+        print("Connection closed")
 
     def on_open(ws):
-        print(f"✅ WebSocket connected!")
+        print("WebSocket connected!")
         # Send a test message
         ws.send(json.dumps({"type": "ping"}))
 
@@ -130,14 +130,14 @@ def test_websocket():
 
         return True
     except Exception as e:
-        print(f"❌ WebSocket test failed: {e}")
+        print(f"WebSocket test failed: {e}")
         return False
 
 
 def run_all_tests():
     """Run all tests"""
     print("=" * 60)
-    print("🚀 ToastyAnalytics V2 - Comprehensive Test Suite")
+    print("ToastyAnalytics V2 - Comprehensive Test Suite")
     print("=" * 60)
 
     results = {
@@ -148,19 +148,19 @@ def run_all_tests():
     }
 
     print("\n" + "=" * 60)
-    print("📋 Test Results Summary")
+    print("Test Results Summary")
     print("=" * 60)
 
     for test_name, passed in results.items():
-        status = "✅ PASS" if passed else "❌ FAIL"
+        status = " PASS" if passed else " FAIL"
         print(f"{test_name}: {status}")
 
     all_passed = all(results.values())
 
     if all_passed:
-        print("\n🎉 All tests passed! System is fully operational.")
+        print("\n All tests passed! System is fully operational.")
     else:
-        print("\n⚠️ Some tests failed. Check the output above for details.")
+        print("\n Some tests failed. Check the output above for details.")
 
     return all_passed
 

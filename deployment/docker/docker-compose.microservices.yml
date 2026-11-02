@@ -28,7 +28,7 @@ services:
       dockerfile: deployment/docker/Dockerfile.grading
     container_name: toasty-grading
     environment:
-      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+      - TOASTYANALYTICS_DB_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,7 +42,7 @@ services:
       dockerfile: deployment/docker/Dockerfile.meta
     container_name: toasty-meta
     environment:
-      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+      - TOASTYANALYTICS_DB_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
       dockerfile: deployment/docker/Dockerfile.analytics
     container_name: toasty-analytics
     environment:
-      - DATABASE_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
+      - TOASTYANALYTICS_DB_URL=postgresql://toasty:toasty123@postgres:5432/toastyanalytics
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,41 +93,9 @@ services:
     networks:
       - toasty-network
 
-  # Prometheus
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: toasty-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - toasty-network
-
-  # Grafana
-  grafana:
-    image: grafana/grafana:latest
-    container_name: toasty-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - toasty-network
-
 networks:
   toasty-network:
     driver: bridge
 
 volumes:
   postgres_data:
-  prometheus_data:
-  grafana_data:

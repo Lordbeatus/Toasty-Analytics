@@ -39,7 +39,7 @@ services:
       context: ../..
       dockerfile: deployment/docker/Dockerfile
     container_name: toasty-api
-    command: uvicorn src.server_v2:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn toastyanalytics.api:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     env_file:
@@ -54,8 +54,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - .:/app
     restart: unless-stopped
 
   # Celery Worker (Background Jobs)
@@ -64,7 +62,7 @@ services:
       context: ../..
       dockerfile: deployment/docker/Dockerfile
     container_name: toasty-worker
-    command: celery -A src.celery_app worker --loglevel=info --concurrency=4
+    command: celery -A toastyanalytics.celery_app worker --loglevel=info --concurrency=4
     env_file:
       - ../../.env
     environment:
@@ -75,8 +73,6 @@ services:
     depends_on:
       - redis
       - postgres
-    volumes:
-      - ../..:/app
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import os; exit(0 if os.path.exists(\"/tmp/celery.pid\") else 1)' 2>/dev/null || exit 0"]
       interval: 30s
@@ -87,18 +83,20 @@ services:
 
   # Celery Beat (Scheduled Tasks)
   beat:
-    build: .
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
     container_name: toasty-beat
-    command: celery -A celery_app beat --loglevel=info
+    command: celery -A toastyanalytics.celery_app beat --loglevel=info
     env_file:
-      - .env
+      - ../../.env
     environment:
+      - TOASTYANALYTICS_DB_URL=postgresql://toasty:password123@postgres:5432/toastyanalytics
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     depends_on:
       - redis
-    volumes:
-      - .:/app
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import os; exit(0)' 2>/dev/null || exit 0"]
       interval: 30s
@@ -107,39 +105,6 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # Prometheus (Metrics Collection)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: toasty-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../../config_files/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    restart: unless-stopped
-
-  # Grafana (Dashboards)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: toasty-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana-provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-
 volumes:
   postgres_data:
   redis_data:
-  prometheus_data:
-  grafana_data:

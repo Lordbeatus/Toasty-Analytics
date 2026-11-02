@@ -17,15 +17,15 @@ Grade your code quality, analyze AI prompts, and get intelligent suggestions - a
 
 ### 1. Start the Backend Server
 
-The extension requires a Flask backend to be running:
+The extension requires the ToastyAnalytics API to be running:
 
 ```bash
 cd toastyanalytics
 pip install -r requirements.txt
-python app.py
+uvicorn toastyanalytics.api:app --port 8000
 ```
 
-✅ Server will run at `http://localhost:5000`
+✅ Server will run at `http://localhost:8000`
 
 ### 2. Check Server Status
 
@@ -58,7 +58,7 @@ Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac) and search for:
 
 Go to **Settings** → Search **"Toasty Analytics"**:
 
-- **Backend URL** - Default: `http://localhost:5000`
+- **Backend URL** - Default: `http://localhost:8000`
 - **Enable Custom Tests** - Toggle user-defined test framework
 
 ## 🐳 Docker Support
@@ -84,13 +84,13 @@ docker-compose up
 ## ❓ Troubleshooting
 
 ### Extension shows "Backend disconnected"
-1. Make sure Flask server is running: `python app.py`
+1. Make sure API server is running: `uvicorn toastyanalytics.api:app --port 8000`
 2. Check the terminal for errors
-3. Visit `http://localhost:5000/health` in your browser
+3. Visit `http://localhost:8000/health` in your browser
 4. Click the status bar item to refresh
 
 ### Port already in use
-Change the port in `app.py` and update **Settings** → **Backend URL**
+Change the API port and update **Settings** → **Backend URL**
 
 ### Module not found errors
 ```bash
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 
 - [Startup Guide](STARTUP-GUIDE.md) - Detailed usage instructions
 - [Publishing Guide](PUBLISHING.md) - How to publish to VS Code Marketplace
-- [Setup Guide](../SETUP.md) - Backend setup
+- [Setup Guide](STARTUP-GUIDE.md) - Backend setup
 - [API Documentation](../README.md) - Backend API reference
 
 ## 🔧 Development

@@ -23,18 +23,16 @@ spec:
     spec:
       containers:
       - name: grading-service
-        image: toastyanalytics/grading-service:latest
+        image: ghcr.io/lordbeatus/toasty-analytics/grading-service:${IMAGE_TAG}
         ports:
         - containerPort: 8000
           name: http
-        - containerPort: 9090
-          name: metrics
         env:
-        - name: DATABASE_URL
+        - name: TOASTYANALYTICS_DB_URL
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: url
+              name: toastyanalytics-secrets
+              key: database-url
         resources:
           requests:
             memory: "256Mi"
@@ -69,9 +67,6 @@ spec:
   - port: 8000
     targetPort: 8000
     name: http
-  - port: 9090
-    targetPort: 9090
-    name: metrics
   type: ClusterIP
 ---
 # Meta-Learning Service Deployment
@@ -92,15 +87,15 @@ spec:
     spec:
       containers:
       - name: meta-learning-service
-        image: toastyanalytics/meta-learning-service:latest
+        image: ghcr.io/lordbeatus/toasty-analytics/meta-learning-service:${IMAGE_TAG}
         ports:
         - containerPort: 8001
         env:
-        - name: DATABASE_URL
+        - name: TOASTYANALYTICS_DB_URL
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: url
+              name: toastyanalytics-secrets
+              key: database-url
         resources:
           requests:
             memory: "128Mi"
@@ -140,15 +135,15 @@ spec:
     spec:
       containers:
       - name: analytics-service
-        image: toastyanalytics/analytics-service:latest
+        image: ghcr.io/lordbeatus/toasty-analytics/analytics-service:${IMAGE_TAG}
         ports:
         - containerPort: 8002
         env:
-        - name: DATABASE_URL
+        - name: TOASTYANALYTICS_DB_URL
           valueFrom:
             secretKeyRef:
-              name: db-credentials
-              key: url
+              name: toastyanalytics-secrets
+              key: database-url
         resources:
           requests:
             memory: "128Mi"
@@ -188,7 +183,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: toastyanalytics/api-gateway:latest
+        image: ghcr.io/lordbeatus/toasty-analytics/api-gateway:${IMAGE_TAG}
         ports:
         - containerPort: 8080
         env:

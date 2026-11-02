@@ -43,7 +43,7 @@ print(f"Average: {result}")
     print(f"Feedback: {result.feedback}")
     print(f"\nSuggestions:")
     for i, suggestion in enumerate(result.suggestions, 1):
-        print(f"  {i}. [{suggestion.category}] {suggestion.description}")
+        print(f"{i}. [{suggestion.category}] {suggestion.description}")
 
 
 def example_2_meta_learning():
@@ -86,8 +86,8 @@ def fibonacci(n):
         },
     )
 
-    print("\n✓ Meta-learner adapted based on feedback!")
-    print("  Next grading for this user will be less harsh on recursion.")
+    print("\n Meta-learner adapted based on feedback!")
+    print("Next grading for this user will be less harsh on recursion.")
 
 
 def example_3_multiple_dimensions():
@@ -113,7 +113,12 @@ def process_data(data_list):
 
     for dimension in dimensions:
         grader = get_grader_for_dimension(dimension)
-        result = grader.grade(code=code, language="python")
+        if dimension is GradingDimension.SPEED:
+            result = grader.grade(generation_time=0.42)
+        elif dimension is GradingDimension.RELIABILITY:
+            result = grader.grade(task_attempts=[{"success": True, "score": 92}])
+        else:
+            result = grader.grade(code=code, language="python")
         print(f"\n{dimension.value.upper()}: {result.score}/{result.max_score}")
 
 
@@ -167,17 +172,16 @@ def process(x,y,z):
     print(f"\nScore: {result.score}/{result.max_score}")
     print("\nLine-Level Issues:")
 
-    if hasattr(result, "breakdown") and result.breakdown:
-        for component, details in result.breakdown.items():
-            if "issues" in details:
-                for issue in details["issues"]:
-                    print(
-                        f"  Line {issue.get('line', 'N/A')}: {issue.get('message', 'Issue')}"
-                    )
+    line_feedback = getattr(result.breakdown, "line_level_feedback", None) or {}
+    if line_feedback:
+        for line_number, message in sorted(line_feedback.items()):
+            print(f"  Line {line_number}: {message}")
+    else:
+        print("  No line-level issues reported.")
 
 
 if __name__ == "__main__":
-    print("\n🔥 ToastyAnalytics Examples 🔥\n")
+    print("\n ToastyAnalytics Examples \n")
 
     try:
         example_1_basic_grading()
@@ -187,11 +191,11 @@ if __name__ == "__main__":
         example_5_line_level_feedback()
 
         print("\n" + "=" * 60)
-        print("✅ All examples completed!")
+        print("All examples completed!")
         print("=" * 60)
 
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
 
         traceback.print_exc()

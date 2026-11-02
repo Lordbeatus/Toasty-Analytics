@@ -1,213 +1,142 @@
 """
-Advanced Usage Examples - MCP Server Integration
+HTTP API examples.
+
+Start the server first (with a .env copied from .env.example):
+
+    cp .env.example .env
+    uvicorn toastyanalytics.api:app --port 8000
+
+Then run this file:
+
+    python examples/api_usage.py
+
+Set TOASTY_API_KEY if your server uses a key other than the development default.
 """
 
-import json
+import os
 
 import requests
 
-# Configuration
-MCP_SERVER_URL = "http://localhost:8000"
+API_URL = os.getenv("TOASTY_API_URL", "http://localhost:8000")
+API_KEY = os.getenv("TOASTY_API_KEY", "dev-local-key")
+USER_ID = "example-user"
+
+session = requests.Session()
 
 
-def example_1_grade_via_api():
-    """Example 1: Grade code via REST API"""
-    print("=" * 60)
-    print("Example 1: Grade via REST API")
-    print("=" * 60)
-
-    # Code to grade
-    payload = {
-        "user_id": "api_user_1",
-        "code": """
-def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr
-        """,
-        "language": "python",
-        "dimensions": ["code_quality", "speed"],
-    }
-
-    try:
-        response = requests.post(f"{MCP_SERVER_URL}/grade", json=payload)
-        response.raise_for_status()
-
-        result = response.json()
-        print(f"\n✓ Grading completed!")
-        print(f"Session ID: {result.get('session_id')}")
-
-        for grade in result.get("results", []):
-            print(f"\n{grade['dimension'].upper()}:")
-            print(f"  Score: {grade['score']}/{grade['max_score']}")
-            print(f"  Feedback: {grade['feedback']}")
-
-    except requests.exceptions.ConnectionError:
-        print("\n❌ Error: MCP server not running!")
-        print("Start it with: toastyanalytics serve")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-
-
-def example_2_submit_feedback():
-    """Example 2: Submit feedback to improve grading"""
+def section(title):
     print("\n" + "=" * 60)
-    print("Example 2: Submit Feedback")
+    print(title)
     print("=" * 60)
 
-    # First grade some code
-    grade_payload = {
-        "user_id": "api_user_2",
-        "code": "def hello(): return 'world'",
-        "language": "python",
-        "dimensions": ["code_quality"],
-    }
 
-    try:
-        # Grade
-        response = requests.post(f"{MCP_SERVER_URL}/grade", json=grade_payload)
-        response.raise_for_status()
-        result = response.json()
-        session_id = result["session_id"]
+def authenticate():
+    """Exchange the API key for a user-scoped JWT and attach it to the session."""
+    section("Authenticate")
 
-        print(f"\n✓ Grading completed (Session: {session_id})")
+    response = session.post(
+        f"{API_URL}/auth/token",
+        json={"user_id": USER_ID},
+        headers={"X-API-Key": API_KEY},
+        timeout=30,
+    )
+    if response.status_code in (401, 403):
+        raise SystemExit(
+            f"Authentication failed ({response.status_code}). Set TOASTY_API_KEY "
+            "to a key configured in TOASTY_API_KEYS; .env.example defines "
+            "'dev-local-key'."
+        )
+    response.raise_for_status()
 
-        # Submit feedback
-        feedback_payload = {
-            "user_id": "api_user_2",
-            "session_id": session_id,
-            "user_feedback_score": 8.5,
-            "explicit_feedback": {
-                "comment": "Good feedback, very helpful!",
-                "dimension": "code_quality",
-            },
-        }
-
-        response = requests.post(f"{MCP_SERVER_URL}/feedback", json=feedback_payload)
-        response.raise_for_status()
-
-        print("\n✓ Feedback submitted!")
-        print("  The system will learn from this and improve future gradings.")
-
-    except requests.exceptions.ConnectionError:
-        print("\n❌ Error: MCP server not running!")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
+    token = response.json()["access_token"]
+    session.headers.update({"Authorization": f"Bearer {token}"})
+    print(f"Authenticated as {USER_ID}")
 
 
-def example_3_get_user_analytics():
-    """Example 3: Get user analytics and learning progress"""
-    print("\n" + "=" * 60)
-    print("Example 3: User Analytics")
-    print("=" * 60)
+def example_1_grade():
+    """Grade a snippet and print the scores."""
+    section("Example 1: Grade code")
 
-    user_id = "api_user_1"
-
-    try:
-        response = requests.get(f"{MCP_SERVER_URL}/analytics/user/{user_id}")
-        response.raise_for_status()
-
-        analytics = response.json()
-
-        print(f"\nUser: {user_id}")
-        print(f"Total Sessions: {analytics.get('total_sessions', 0)}")
-        print(f"Average Score: {analytics.get('average_score', 0):.1f}")
-        print(f"Active Strategies: {analytics.get('active_strategies', 0)}")
-
-        # Show trend
-        if "score_trend" in analytics:
-            print("\nScore Trend:")
-            for dimension, trend in analytics["score_trend"].items():
-                print(f"  {dimension}: {trend}")
-
-    except requests.exceptions.ConnectionError:
-        print("\n❌ Error: MCP server not running!")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-
-
-def example_4_multi_agent_coordination():
-    """Example 4: Register multiple agents"""
-    print("\n" + "=" * 60)
-    print("Example 4: Multi-Agent Coordination")
-    print("=" * 60)
-
-    agents = [
-        {
-            "agent_id": "agent_python_specialist",
-            "agent_name": "Python Specialist",
-            "capabilities": ["python", "code_quality"],
-            "metadata": {"specialization": "python", "version": "1.0"},
+    response = session.post(
+        f"{API_URL}/grade",
+        json={
+            "user_id": USER_ID,
+            "code": "def add(a, b):\n    return a + b\n",
+            "language": "python",
+            "dimensions": ["code_quality"],
         },
-        {
-            "agent_id": "agent_javascript_specialist",
-            "agent_name": "JavaScript Specialist",
-            "capabilities": ["javascript", "code_quality"],
-            "metadata": {"specialization": "javascript", "version": "1.0"},
+        timeout=30,
+    )
+    response.raise_for_status()
+    result = response.json()
+
+    print(f"Grading ID: {result['grading_id']}")
+    print(f"Overall score: {result['overall_score']}")
+    for dimension, score in result["scores"].items():
+        print(f"  {dimension}: {score}")
+    return result["grading_id"]
+
+
+def example_2_feedback(grading_id):
+    """Send feedback so the meta-learner can adapt."""
+    section("Example 2: Submit feedback")
+
+    response = session.post(
+        f"{API_URL}/feedback",
+        json={
+            "grading_id": grading_id,
+            "user_id": USER_ID,
+            "rating": 4,
+            "comments": "Useful suggestions, slightly strict on naming.",
         },
-    ]
-
-    try:
-        for agent_data in agents:
-            response = requests.post(
-                f"{MCP_SERVER_URL}/agents/register", json=agent_data
-            )
-            response.raise_for_status()
-            print(f"✓ Registered: {agent_data['agent_name']}")
-
-        # List all agents
-        response = requests.get(f"{MCP_SERVER_URL}/agents")
-        response.raise_for_status()
-        all_agents = response.json()
-
-        print(f"\nTotal Agents: {len(all_agents)}")
-        for agent in all_agents:
-            print(f"  - {agent['agent_name']} ({agent['agent_id']})")
-
-    except requests.exceptions.ConnectionError:
-        print("\n❌ Error: MCP server not running!")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
+        timeout=30,
+    )
+    response.raise_for_status()
+    print(response.json())
 
 
-def example_5_health_check():
-    """Example 5: Check server health"""
-    print("\n" + "=" * 60)
-    print("Example 5: Health Check")
-    print("=" * 60)
+def example_3_analytics():
+    """Read the aggregated analytics for a user."""
+    section("Example 3: User analytics")
 
-    try:
-        response = requests.get(f"{MCP_SERVER_URL}/health")
-        response.raise_for_status()
+    response = session.get(f"{API_URL}/analytics/user/{USER_ID}", timeout=30)
+    response.raise_for_status()
+    print(response.json())
 
-        health = response.json()
-        print(f"\nStatus: {health.get('status', 'unknown')}")
-        print(f"Database: {health.get('database', {}).get('status', 'unknown')}")
-        print(f"Version: {health.get('version', 'unknown')}")
 
-    except requests.exceptions.ConnectionError:
-        print("\n❌ Error: MCP server not running!")
-        print("Start it with: toastyanalytics serve --port 8000")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
+def example_4_dimensions():
+    """List the grading dimensions the service supports."""
+    section("Example 4: Available dimensions")
+
+    response = session.get(f"{API_URL}/dimensions", timeout=30)
+    response.raise_for_status()
+    for dimension in response.json()["dimensions"]:
+        print(f"  {dimension['name']}: {dimension['description']}")
+
+
+def example_5_health():
+    """Check that the service and its database are up."""
+    section("Example 5: Health check")
+
+    # Health is public and needs no credentials.
+    response = requests.get(f"{API_URL}/health", timeout=30)
+    response.raise_for_status()
+    print(response.json())
 
 
 if __name__ == "__main__":
-    print("\n🔥 ToastyAnalytics MCP Server Examples 🔥")
-    print(f"Server: {MCP_SERVER_URL}\n")
-
-    print("NOTE: Make sure the MCP server is running:")
-    print("  $ toastyanalytics serve --port 8000\n")
-
-    example_5_health_check()
-    example_1_grade_via_api()
-    example_2_submit_feedback()
-    example_3_get_user_analytics()
-    example_4_multi_agent_coordination()
-
-    print("\n" + "=" * 60)
-    print("✅ All API examples completed!")
-    print("=" * 60)
+    try:
+        authenticate()
+        grading_id = example_1_grade()
+        example_2_feedback(grading_id)
+        example_3_analytics()
+        example_4_dimensions()
+        example_5_health()
+        print("\nAll examples completed.")
+    except requests.ConnectionError:
+        print(
+            f"Could not reach {API_URL}. "
+            "Start the server with: uvicorn toastyanalytics.api:app --port 8000"
+        )
+    except requests.HTTPError as exc:
+        print(f"Request failed: {exc.response.status_code} {exc.response.text}")

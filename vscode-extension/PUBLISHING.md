@@ -151,4 +151,4 @@ No credit card required! 🎉
 
 ---
 
-**Questions?** Check the SETUP.md or official VS Code docs!
+**Questions?** Check STARTUP-GUIDE.md or the official VS Code docs.

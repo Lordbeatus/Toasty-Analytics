@@ -10,7 +10,7 @@
 ```bash
 cd toastyanalytics
 pip install flask flask-cors
-python app.py
+uvicorn toastyanalytics.api:app --port 8000
 ```
 
 **Option B: Docker (Recommended)**
@@ -55,7 +55,7 @@ Click the status bar to manually refresh!
 
 ### Install Dependencies
 
-The backend needs Flask installed:
+The backend needs the Python package installed:
 
 ```bash
 # Navigate to toastyanalytics folder
@@ -71,7 +71,7 @@ Test the backend:
 
 ```bash
 # In browser or terminal:
-curl http://localhost:5000/health
+curl http://localhost:8000/health
 
 # Should return:
 # {"status": "healthy", "service": "Toasty Analytics"}
@@ -118,7 +118,7 @@ For the full experience:
 **Solution 1:** Start the backend
 ```bash
 cd toastyanalytics
-python app.py
+uvicorn toastyanalytics.api:app --port 8000
 ```
 
 **Solution 2:** Check if port 5000 is already used
@@ -131,7 +131,7 @@ lsof -i :5000
 ```
 
 **Solution 3:** Change the port
-1. Edit `app.py`: Change `port=5000` to another port
+1. Start the API on another port, for example `--port 8001`
 2. Update VS Code Settings → Search "Toasty" → Change Backend URL
 
 ### 🔧 Module Not Found
@@ -150,7 +150,7 @@ docker-compose up  # Start containers
 
 ### 🌐 Cannot Access Backend
 
-1. Open browser → Go to `http://localhost:5000/health`
+1. Open browser → Go to `http://localhost:8000/health`
 2. If you see JSON response, backend is working!
 3. If not, check terminal for error messages
 

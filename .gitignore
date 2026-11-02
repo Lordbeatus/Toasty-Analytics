@@ -1,65 +1,48 @@
-# Python
+# Byte-compiled / cache
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
 
 # Virtual environments
+.venv/
 venv/
 env/
 ENV/
-.venv
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Distribution / packaging
-.Python
+# Build and packaging
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+.eggs/
+wheels/
+sdist/
 
-# Testing
+# Test and coverage artifacts
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
+coverage.xml
 htmlcov/
 .tox/
 .hypothesis/
+bandit-report.json
+*.sarif
 
-# Database
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+
+# Databases and volumes
 *.db
 *.sqlite
 *.sqlite3
-
-# Environment
-.env
-
-# Docker volumes
 postgres_data/
 redis_data/
-prometheus_data/
-grafana_data/
-toastyanalytics.db
 
-# Environment
+# Environment files
 .env
 .env.local
 .env.*.local
@@ -68,7 +51,15 @@ toastyanalytics.db
 *.log
 logs/
 
-# OS
+# Node
+node_modules/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 

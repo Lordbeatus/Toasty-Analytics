@@ -1,0 +1,15 @@
+* text=auto
+
+# Scripts and container files must stay LF to run on Linux.
+*.sh text eol=lf
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binaries should never be normalized.
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.pdb binary

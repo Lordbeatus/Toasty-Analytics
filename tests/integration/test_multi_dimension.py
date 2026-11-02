@@ -1,5 +1,5 @@
 """
-Test multi-dimension grading with server_v2.py
+Test multi-dimension grading with api.py
 """
 
 import pytest
@@ -10,7 +10,7 @@ pytestmark = pytest.mark.skip(reason="Requires live server on localhost:8000")
 
 def test_single_dimension():
     """Test grading with single dimension (code_quality)"""
-    print("🧪 Test 1: Single Dimension (Code Quality)")
+    print("Test 1: Single Dimension (Code Quality)")
 
     response = requests.post(
         "http://localhost:8000/grade",
@@ -24,16 +24,16 @@ def test_single_dimension():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Score: {data['overall_score']}/100")
-        print(f"   Dimensions tested: {list(data['scores'].keys())}")
+        print(f"Score: {data['overall_score']}/100")
+        print(f"Dimensions tested: {list(data['scores'].keys())}")
     else:
-        print(f"❌ Error: {response.status_code} - {response.text}")
+        print(f"Error: {response.status_code} - {response.text}")
     print()
 
 
 def test_multi_dimension():
     """Test grading with multiple dimensions"""
-    print("🧪 Test 2: Multi-Dimension (Code Quality + Reliability)")
+    print("Test 2: Multi-Dimension (Code Quality + Reliability)")
 
     code = """def calculate_fibonacci(n):
     if n <= 1:
@@ -52,19 +52,19 @@ def test_multi_dimension():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Overall Score: {data['overall_score']}/100")
-        print(f"   Dimension Scores:")
+        print(f"Overall Score: {data['overall_score']}/100")
+        print("Dimension Scores:")
         for dim, score in data["scores"].items():
-            print(f"     - {dim}: {score}/100")
-        print(f"   Suggestions: {len(data['improvement_suggestions'])} found")
+            print(f"- {dim}: {score}/100")
+        print(f"Suggestions: {len(data['improvement_suggestions'])} found")
     else:
-        print(f"❌ Error: {response.status_code} - {response.text}")
+        print(f"Error: {response.status_code} - {response.text}")
     print()
 
 
 def test_with_speed():
     """Test with speed dimension (requires generation_time in context)"""
-    print("🧪 Test 3: Speed Dimension (with context)")
+    print("Test 3: Speed Dimension (with context)")
 
     response = requests.post(
         "http://localhost:8000/grade",
@@ -79,17 +79,17 @@ def test_with_speed():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Speed Score: {data['scores']['speed']}/100")
+        print(f"Speed Score: {data['scores']['speed']}/100")
         feedback = data["feedback"]["speed"]
-        print(f"   Feedback: {feedback['feedback']}")
+        print(f"Feedback: {feedback['feedback']}")
     else:
-        print(f"❌ Error: {response.status_code} - {response.text}")
+        print(f"Error: {response.status_code} - {response.text}")
     print()
 
 
 def test_all_dimensions():
     """Test all three dimensions together"""
-    print("🧪 Test 4: All Dimensions (Quality + Speed + Reliability)")
+    print("Test 4: All Dimensions (Quality + Speed + Reliability)")
 
     code = """def binary_search(arr, target):
     left, right = 0, len(arr) - 1
@@ -116,15 +116,15 @@ def test_all_dimensions():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Overall Score: {data['overall_score']:.1f}/100")
-        print(f"   Dimension Breakdown:")
+        print(f"Overall Score: {data['overall_score']:.1f}/100")
+        print("Dimension Breakdown:")
         for dim, score in data["scores"].items():
-            print(f"     - {dim}: {score}/100")
-        print(f"   Learning Applied: {data['learning_applied']}")
-        print(f"   Cached: {data['cached']}")
+            print(f"- {dim}: {score}/100")
+        print(f"Learning Applied: {data['learning_applied']}")
+        print(f"Cached: {data['cached']}")
     else:
-        print(f"❌ Error: {response.status_code}")
-        print(f"   {response.text}")
+        print(f"Error: {response.status_code}")
+        print(f"{response.text}")
     print()
 
 
@@ -141,11 +141,11 @@ if __name__ == "__main__":
         test_all_dimensions()
 
         print("=" * 60)
-        print("✅ All tests completed!")
+        print("All tests completed!")
         print("=" * 60)
 
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to API. Is it running?")
-        print("   Try: docker-compose up -d")
+        print("Cannot connect to API. Is it running?")
+        print("Try: docker-compose up -d")
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"Unexpected error: {e}")

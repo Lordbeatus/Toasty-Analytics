@@ -1,69 +1,54 @@
-# ToastyAnalytics Examples
+# Examples
 
-This directory contains practical examples demonstrating how to use ToastyAnalytics.
+Three runnable examples. Install the package from the repository root first:
 
-## Quick Start
-
-1. Install ToastyAnalytics:
 ```bash
-pip install -e ..
+pip install -e .
 ```
 
-2. Run basic examples:
+## basic_usage.py
+
+Uses the library directly: code-quality grading, meta-learning from feedback,
+multiple dimensions, custom weights, and line-level feedback.
+
 ```bash
-python basic_usage.py
+python examples/basic_usage.py
 ```
 
-3. Start MCP server for API examples:
+It writes to an in-memory database, so it needs no server.
+
+## api_usage.py
+
+Exercises the HTTP API: token exchange, grading, feedback, user analytics,
+dimensions, and the health endpoint.
+
 ```bash
-toastyanalytics serve --port 8000
+cp .env.example .env                            # defines the dev API key
+uvicorn toastyanalytics.api:app --port 8000     # terminal 1
+python examples/api_usage.py                    # terminal 2
 ```
 
-4. Run API examples (in new terminal):
+The example reads `TOASTY_API_KEY` (default `dev-local-key`, as set in
+`.env.example`) and exchanges it for a JWT at `POST /auth/token`.
+
+Set `TOASTY_API_URL` to target another host or port:
+
 ```bash
-python api_usage.py
+TOASTY_API_URL=http://localhost:8123 TOASTY_API_KEY=your-key python examples/api_usage.py
 ```
 
-## Examples
+## sample_code.py
 
-### basic_usage.py
-- Example 1: Basic code grading
-- Example 2: Meta-learning integration
-- Example 3: Multiple grading dimensions
-- Example 4: Custom weights configuration
-- Example 5: Line-level feedback
+Generates `good_code.py`, `bad_code.py`, and `medium_code.py` in the current
+directory, then prints the CLI command to grade them.
 
-### api_usage.py
-- Example 1: Grade code via REST API
-- Example 2: Submit feedback
-- Example 3: Get user analytics
-- Example 4: Multi-agent coordination
-- Example 5: Health checks
-
-## Sample Code Files
-
-Example Python files you can use for testing:
-
-**good_code.py** - Well-written Python code
-**bad_code.py** - Code with quality issues
-**medium_code.py** - Average quality code
-
-Grade them with:
 ```bash
-toastyanalytics grade good_code.py --user-id test_user -d code_quality
+python examples/sample_code.py
+toastyanalytics grade good_code.py --user-id demo -d code_quality
 ```
 
-## Integration Patterns
+## Where to go next
 
-See the examples for common integration patterns:
-- CLI usage
-- Python SDK usage
-- REST API usage
-- Meta-learning workflows
-- Multi-agent coordination
-
-## More Information
-
-- [QUICKSTART.md](../QUICKSTART.md) - Getting started guide
-- [docs/USAGE.md](../docs/USAGE.md) - Comprehensive usage guide
-- [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) - System architecture
+- [Quick start](../docs/quickstart.md) — installation and configuration
+- [Architecture](../docs/architecture.md) — how grading and meta-learning fit together
+- [API reference](http://localhost:8000/docs) — interactive OpenAPI docs

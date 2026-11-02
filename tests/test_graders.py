@@ -2,8 +2,8 @@
 Tests for core graders
 """
 
-from src.core.types import GradingDimension
-from src.graders import CodeQualityGraderV2, ReliabilityGrader, SpeedGrader
+from toastyanalytics.core.types import GradingDimension
+from toastyanalytics.graders import CodeQualityGraderV2, ReliabilityGrader, SpeedGrader
 
 
 class TestCodeQualityGrader:
