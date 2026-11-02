@@ -30,7 +30,7 @@ ISSUER = "toastyanalytics"
 SCOPE_GRADE_READ = "grade:read"
 SCOPE_GRADE_WRITE = "grade:write"
 SCOPE_ANALYTICS_READ = "analytics:read"
-SCOPE_TOKEN_ISSUE = "token:issue"
+SCOPE_TOKEN_ISSUE = "token:issue"  # nosec B105
 KNOWN_SCOPES = {
     SCOPE_GRADE_READ,
     SCOPE_GRADE_WRITE,
@@ -211,7 +211,7 @@ class AuthManager:
         return Token(
             access_token=self.create_access_token(user_id, scopes, roles),
             refresh_token=self.create_refresh_token(user_id, scopes, roles),
-            token_type="bearer",
+            token_type="bearer",  # nosec B106
             expires_in=int(self.access_ttl.total_seconds()),
         )
 
