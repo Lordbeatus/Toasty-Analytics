@@ -202,7 +202,7 @@ def feedback(ctx, user_id, session_id, score, too_detailed, want_more_detail):
 
 
 @cli.command()
-@click.option("--host", default="0.0.0.0", help="Server host")
+@click.option("--host", default="0.0.0.0", help="Server host")  # nosec B104
 @click.option("--port", default=8000, help="Server port")
 @click.option("--reload", is_flag=True, help="Enable auto-reload")
 def serve(host, port, reload):

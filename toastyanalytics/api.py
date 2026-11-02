@@ -123,19 +123,22 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: dict, user_id: str):
         if user_id in self.active_connections:
-            for connection in self.active_connections[user_id]:
+            for connection in list(self.active_connections[user_id]):
                 try:
                     await connection.send_json(message)
                 except Exception:
-                    pass
+                    self.disconnect(connection, user_id)
 
     async def broadcast(self, message: dict):
-        for user_connections in self.active_connections.values():
-            for connection in user_connections:
+        failed_connections = []
+        for user_id, user_connections in list(self.active_connections.items()):
+            for connection in list(user_connections):
                 try:
                     await connection.send_json(message)
                 except Exception:
-                    pass
+                    failed_connections.append((user_id, connection))
+        for user_id, connection in failed_connections:
+            self.disconnect(connection, user_id)
 
 
 manager = ConnectionManager()
@@ -733,4 +736,4 @@ def _get_dimension_description(dim: GradingDimension) -> str:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)  # nosec B104

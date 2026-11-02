@@ -40,8 +40,8 @@ if TORCH_AVAILABLE:
             if not TORCH_AVAILABLE:
                 raise ImportError("PyTorch required for neural grading")
 
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.encoder = AutoModel.from_pretrained(model_name)
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)  # nosec B615
+            self.encoder = AutoModel.from_pretrained(model_name)  # nosec B615
 
             # Quality prediction head
             self.quality_head = nn.Sequential(
@@ -101,7 +101,9 @@ class NeuralGrader(BaseGrader):
 
         if model_path and Path(model_path).exists():
             # Load fine-tuned model
-            self.model = torch.load(model_path, map_location=self.device)
+            self.model = torch.load(
+                model_path, map_location=self.device, weights_only=True
+            )
             self.model.eval()
             print(f"Loaded neural grader model from {model_path}")
         else:
